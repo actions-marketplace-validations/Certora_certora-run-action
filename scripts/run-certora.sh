@@ -39,8 +39,10 @@ elif [[ "$CERTORA_ECOSYSTEM" == "solana" ]]; then
   CLI_ENTRYPOINT="certoraSolanaProver"
 elif [[ "$CERTORA_ECOSYSTEM" == "sui" ]]; then
   CLI_ENTRYPOINT="certoraSuiProver"
+elif [[ "$CERTORA_ECOSYSTEM" == "soroban" ]]; then
+  CLI_ENTRYPOINT="certoraSorobanProver"
 else
-  echo "::error title=Unsupported Ecosystem::Ecosystem $CERTORA_ECOSYSTEM is not supported. Please use 'evm', 'solana', or 'sui'."
+  echo "::error title=Unsupported Ecosystem::Ecosystem $CERTORA_ECOSYSTEM is not supported. Please use 'evm', 'solana', 'sui', or 'soroban'."
   exit 1
 fi
 echo "Using cli entrypoint: $CLI_ENTRYPOINT"
@@ -152,16 +154,16 @@ for i in "${!pids[@]}"; do
   else
     if [[ "$CERTORA_COMPILATION_STEPS_ONLY" == 'true' ]]; then
       STATUS="Compiled"
-    else
-      STATUS="Submitted"
-    fi
-
-    LINK=$(grep -oE "https://(vaas-dev|vaas-stg|prover)\.certora\.com/[^/]+/[0-9]+/[a-zA-Z0-9-]+/?.*\?.*anonymousKey=[a-zA-Z0-9-]+" "${logs[i]}" || true)
-    if [[ -z "$LINK" ]]; then
-      ((jobs--)) || true
       MD_LINK="-"
     else
-      MD_LINK="[link]($LINK)"
+      STATUS="Submitted"
+      LINK=$(grep -oE "https://(vaas-dev|vaas-stg|prover)\.certora\.com/[^/]+/[0-9]+/[a-zA-Z0-9-]+/?.*\?.*anonymousKey=[a-zA-Z0-9-]+" "${logs[i]}" || true)
+      if [[ -z "$LINK" ]]; then
+        ((jobs--)) || true
+        MD_LINK="-"
+      else
+        MD_LINK="[link]($LINK)"
+      fi
     fi
 
     echo "| ${conf#"$common_prefix"} | $STATUS | $MD_LINK | ${logs[i]#$CERTORA_LOG_DIR} |" >>"$CERTORA_REPORT_FILE"
